@@ -1,0 +1,46 @@
+#mask, #scene{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+#mask{
+  z-index: 0;
+  background-color: black;
+}
+
+#scene{
+  z-index: 1;
+  &.hidden{
+    z-index: -1;
+  }
+}
+
+p{
+  color: white;
+}
+
+$stereoThumbnailWidth: 200px;
+$monoThumbnailWidth: $stereoThumbnailWidth/2;
+
+#ui {
+  position: relative;
+  z-index: 100;
+
+  .images .image{
+    position: relative;
+    margin-right: $monoThumbnailWidth;
+    padding-right: 8px;
+    img{
+      position: absolute;
+      clip: rect(0, $monoThumbnailWidth, auto, 0);
+      width: $stereoThumbnailWidth;
+      margin-right: 10px;
+    }
+  }
+}
+
+
+
