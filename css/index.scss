@@ -1,3 +1,14 @@
+$stereoThumbnailWidth: 450px;
+$monoThumbnailWidth: $stereoThumbnailWidth/2;
+
+body.vr-support-resolved .vr-pending,
+body:not(.vr-support-resolved) .non-vr-only,
+body:not(.vr-support-resolved) .vr-only,
+body.vr-supported .non-vr-only,
+body.vr-unsupported .vr-only{
+  display: none;
+}
+
 #mask, #scene{
   position: absolute;
   width: 100%;
@@ -22,25 +33,31 @@ p{
   color: white;
 }
 
-$stereoThumbnailWidth: 200px;
-$monoThumbnailWidth: $stereoThumbnailWidth/2;
 
 #ui {
+  padding: 1px 20px;
   position: relative;
   z-index: 100;
+  color: white;
+  overflow-y: auto;
+  height: 100%;
 
   .images .image{
-    position: relative;
-    margin-right: $monoThumbnailWidth;
-    padding-right: 8px;
+    display: inline-block;
+    margin: 0 8px 8px 0;
+    width: $monoThumbnailWidth;
+    overflow: hidden;
+
     img{
-      position: absolute;
-      clip: rect(0, $monoThumbnailWidth, auto, 0);
       width: $stereoThumbnailWidth;
       margin-right: 10px;
     }
   }
 }
 
-
-
+.preloader{
+  display: none;
+  &.shown{
+    display: block;
+  }
+}

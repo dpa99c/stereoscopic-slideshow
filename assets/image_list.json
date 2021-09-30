@@ -1,10 +1,74 @@
 [
   {
-    "url": "forrabury_coastguard_lookout.jps",
-    "description": "Coastguard lookout at Forrabury, near Boscastle"
+    "name": "padstow_harbour_reflections",
+    "description": "Padstow harbour"
   },
   {
-    "url": "forraby_stitches_track.jps",
+    "name": "padstow_harbour_boats",
+    "description": "Boats in Padstow harbour"
+  },
+  {
+    "name": "padstow_church_graves",
+    "description": "Graves in the churchyard at Padstow"
+  },
+  {
+    "name": "padstow_golden_lion",
+    "description": "Hanging baskets of flowers outside the Golden Lion pub, Padstow"
+  },
+  {
+    "name": "padstow_grove_place",
+    "description": "Grove Place, Padstow"
+  },
+  {
+    "name": "padstow_war_memorial",
+    "description": "War memorial in Padstow"
+  },
+  {
+    "name": "padstow_village_pump",
+    "description": "Old village pump in Padstow"
+  },
+  {
+    "name": "padstow_path_to_memorial",
+    "description": "Path to the war memorial in Padstow"
+  },
+  {
+    "name": "padstow_memorial_park_benches",
+    "description": "Benches in Padstow's war memorial park"
+  },
+  {
+    "name": "port_gaverne_coastal_path",
+    "description": "Coastal path near Port Gaverne"
+  },
+  {
+    "name": "port_gaverne_headland",
+    "description": "Rocky headland at Port Gaverne"
+  },
+  {
+    "name": "port_gaverne_headland_splash",
+    "description": "Waves washing over the rocks at Port Gaverne"
+  },
+  {
+    "name": "boscastle_harbour",
+    "description": "Boscastle harbour"
+  },
+  {
+    "name": "willapark_horse",
+    "description": "Horse overlooking Boscastle harbour on Willapark headland"
+  },
+  {
+    "name": "willapark_coast",
+    "description": "View of the coastline from Willapark headland"
+  },
+  {
+    "name": "forrabury_church",
+    "description": "Church at Forrabury,    near Boscastle"
+  },
+  {
+    "name": "willapark_coastguard_lookout",
+    "description": "Coastguard lookout at Willapark, near Boscastle"
+  },
+  {
+    "name": "forrabury_stitches_track",
     "description": "Track across Forrabury Stitches towards Forrabury Church"
   }
 ]

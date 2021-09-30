@@ -1,3 +1,4 @@
+/* global AFRAME */
 AFRAME.registerComponent("gallery-controller", (function(){
     var Controller = {};
 
@@ -6,41 +7,55 @@ AFRAME.registerComponent("gallery-controller", (function(){
      *********************/
     const vrHeadsetImgYOffset = 1.2;
     const vrHeadsetImgZOffset = -0.45;
+    const minUiZDistance = -0.5;
+    const maxUiZDistance = -2;
+    const uiZDistanceStep = 0.5
+    const stereoImageId = 'fullsize-image'
+    const _stereoImage = '#'+stereoImageId;
     
-    let galleryController, galleryEl, sceneEl, leye, reye, descriptionText,
-        isHeadsetConnected,
-        $scene;
+    let galleryController, sceneEl, leye, reye, $descriptionText, descriptionText,
+        $body, $scene, $sceneEntities, $assets, $stereoImage, stereoImage, $imageLoading, $imageLoadError;
 
     /*********************
      * Public properties
      *********************/
+    Controller.shouldEnterVR = false;
     Controller.isInVR = false;
     Controller.isImmersiveVRSupported = false;
+    Controller.isLoadingStereoImage = false;
+    Controller.el;
 
     /*********************
      * Internal functions
      *********************/
     var init = function(){
-        galleryEl = galleryController.el;
-        sceneEl = galleryEl.sceneEl;
-        leye = galleryEl.children[0];
-        reye = galleryEl.children[1];
-        descriptionText = galleryEl.children[2];
-        isHeadsetConnected = AFRAME.utils.device.checkHeadsetConnected();
+        Controller.el = galleryController.el;
+        sceneEl = Controller.el.sceneEl;
+        leye = $('#left-image')[0];
+        reye = $('#right-image')[0];
+        $descriptionText = $('#description-text');
+        descriptionText = $descriptionText[0];
         $scene = $('#scene');
+        $assets = $('#assets');
+        $imageLoading = $('#image-loading');
+        $imageLoadError = $('#image-load-error');
+        $body = $('body');
 
         if(Controller.isImmersiveVRSupported){
-            let imgPosition = leye.getAttribute('position');
-            imgPosition.y += vrHeadsetImgYOffset;
-            imgPosition.z += vrHeadsetImgZOffset;
-            leye.setAttribute('position', imgPosition);
-            reye.setAttribute('position', imgPosition);
-
-            let descriptionTextPosition =  descriptionText.getAttribute('position');
-            descriptionTextPosition.y += vrHeadsetImgYOffset;
-            descriptionTextPosition.z += vrHeadsetImgZOffset;
-            descriptionText.setAttribute('position', descriptionTextPosition);
+            $body.addClass('vr-supported');
+            $sceneEntities = $(Controller.el).find('> *');
+            $sceneEntities.each((i, entity) => {
+                let position = entity.getAttribute('position');
+                position.y += vrHeadsetImgYOffset;
+                position.z += vrHeadsetImgZOffset;
+                entity.setAttribute('position', position);
+            });
+            Utils.setAttributeOnEntityNodelist($('#exit-button a-entity[text]'), 'text', 'value', 'Exit VR');
+        }else{
+            $body.addClass('vr-unsupported');
+            Utils.setAttributeOnEntityNodelist($('.vr-only'), 'visible', false);
         }
+        $body.addClass('vr-support-resolved');
 
         sceneEl.addEventListener('enter-vr', Controller.onEnterVR.bind(this), false);
         sceneEl.addEventListener('exit-vr', Controller.onExitVR.bind(this), false);
@@ -48,7 +63,27 @@ AFRAME.registerComponent("gallery-controller", (function(){
 
     var onIsSessionSupported = function(isSupported){
         Controller.isImmersiveVRSupported = isSupported;
-        init();
+        onNamespacesLoaded([
+            'Components.Utils'
+        ], function(){
+            Utils = Components.Utils;
+            init();
+        });
+    };
+
+    var unloadStereoImage = function(){
+        $stereoImage = $(stereoImage);
+        $stereoImage.attr('src', '').remove();
+        $stereoImage = stereoImage = null;
+        Controller.isLoadingStereoImage = false;
+        leye.setAttribute("material", "src", '');
+        reye.setAttribute("material", "src", '');
+        setStereoImageVisibility(false);
+    };
+
+    var setStereoImageVisibility = function(visible){
+        leye.setAttribute("visible", visible)
+        reye.setAttribute("visible", visible)
     };
 
     /*********************
@@ -56,16 +91,19 @@ AFRAME.registerComponent("gallery-controller", (function(){
      *********************/
 
     /**
-     * Called once when component is attached. Generally for initial setup.
+     * Called once when component is attached.
+     * Generally for initial setup.
+     * @override
      */
     Controller.init = function() {
-        window.galleryController = galleryController = this;
+        galleryController = this;
         navigator.xr.isSessionSupported('immersive-vr').then(onIsSessionSupported);
     }
 
     /**
      * Called when a component is removed (e.g., via removeAttribute).
      * Generally undoes all modifications to the entity.
+     * @override
      */
     Controller.remove = function () {
         sceneEl.removeEventListener('enter-vr', Controller.onEnterVR, false);
@@ -76,6 +114,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
      * Called when entering VR mode
      */
     Controller.onEnterVR = function(event){
+        Controller.isInVR = true;
         $scene.removeClass('hidden');
     };
 
@@ -83,28 +122,87 @@ AFRAME.registerComponent("gallery-controller", (function(){
      * Called when exiting VR mode
      */
     Controller.onExitVR = function (event) {
+        Controller.isInVR = false;
+        unloadStereoImage();
         $scene.addClass('hidden');
     };
 
 
-    Controller.showImg = function(url, description){
-        leye.setAttribute("material", "src", url);
-        reye.setAttribute("material", "src", url);
+    Controller.showImg = function(index, url, description){
+        function onImgLoaded(){
+            leye.setAttribute("material", "src", _stereoImage);
+            reye.setAttribute("material", "src", _stereoImage);
+            setStereoImageVisibility(true);
+            descriptionText.setAttribute("text", "value", description);
+            Utils.setVisibleOnEntityNodelist($descriptionText, true);
+            Utils.setVisibleOnEntityNodelist($imageLoading, false);
+            Utils.setVisibleOnEntityNodelist($imageLoadError, false);
+            Controller.isLoadingStereoImage = false;
 
-        descriptionText.setAttribute("text", "value", description);
+            if(!Controller.isInVR && Controller.shouldEnterVR) Controller.enterVR();
+        }
 
+        function onImageLoadError(){
+            unloadStereoImage();
+            Utils.setVisibleOnEntityNodelist($descriptionText, false);
+            Utils.setVisibleOnEntityNodelist($imageLoading, false);
+            Utils.setVisibleOnEntityNodelist($imageLoadError, true);
+
+            if(!Controller.isInVR && Controller.shouldEnterVR) Controller.enterVR();
+        }
+
+        setStereoImageVisibility(false);
+        Utils.setVisibleOnEntityNodelist($descriptionText, false);
+        Utils.setVisibleOnEntityNodelist($imageLoading, true);
+        Utils.setVisibleOnEntityNodelist($imageLoadError, false);
         if(!Controller.isInVR) Controller.enterVR();
+
+        $stereoImage = $(stereoImage);
+        if($stereoImage.length){
+            $stereoImage.remove();
+            $stereoImage[0] = null;
+        }
+
+
+        stereoImage = document.createElement('img');
+        stereoImage.setAttribute('id', stereoImageId);
+        stereoImage.setAttribute('crossorigin', "anonymous");
+        stereoImage.setAttribute('src', url);
+        stereoImage.onload = onImgLoaded;
+        stereoImage.onerror = onImageLoadError;
+        $stereoImage = $(stereoImage);
+        $stereoImage.appendTo($assets);
+        Controller.isLoadingStereoImage = true;
     };
 
     Controller.enterVR = function(){
+        Controller.shouldEnterVR = true;
         sceneEl.enterVR();
-        Controller.isInVR = true;
     };
 
     Controller.exitVR = function(){
+        Controller.shouldEnterVR = false;
         sceneEl.exitVR();
-        Controller.isInVR = false;
     };
 
+    Controller.moveUiFurtherAway = function(){
+        $sceneEntities.each((i, entity) => {
+            let position = entity.getAttribute('position');
+            if(position.z <= maxUiZDistance) return;
+            position.z -= uiZDistanceStep;
+            entity.setAttribute('position', position);
+        });
+    };
+
+    Controller.moveUiCloser = function(){
+        $sceneEntities.each((i, entity) => {
+            let position = entity.getAttribute('position');
+            if(position.z >= minUiZDistance) return;
+            position.z += uiZDistanceStep;
+            entity.setAttribute('position', position);
+        });
+    };
+
+    namespace('Components.GalleryController', Controller);
     return Controller;
 })());

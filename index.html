@@ -1,15 +1,112 @@
 <html lang="en">
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@4.2.1/dist/aframe-event-set-component.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
+    <script src="https://unpkg.com/tinykeys@1.2.0/dist/tinykeys.umd.js"></script>
     <script src="lib/aframe-stereo-component.js"></script>
 
-    <script src="js/gallery-controller.js"></script>
+    <script>
+      /**
+       * Assigns an object instance to a global namespace.
+       * Safely assigns instance object to the namespace, preserving any existing children of the namespace to allow for
+       * async loading and evaluation of runtime scripts.
+       *
+       * @param {String} name - name of global namespace.
+       * Can be single-level (e.g. "Foo") or multi-level (e.g "Foo.Bar").
+       * If multi-level, each parent namespace that doesn't exist will also be defined if it's not already.
+       * @param {Object} instance - object to assign to the global namespace
+       */
+      function namespace(name, instance){
+        if(typeof name !== "string") throw '\'name\' must be a string defining a namespace';
+        if(typeof instance !== "object") throw '\'instance\' must be an object to assign to the namespace';
 
+        var parts = name.split('.');
+        var l = parts.length;
+        var v;
+        var i;
+
+        var o = window;
+        var n = '';
+
+        for(i = 0; i < l; i++){
+          v = parts[i];
+          n += (n ? '.' : '') + v;
+
+          if(n === name){
+            if(typeof o[v] !== 'undefined'){
+              // Target namespace already exists: move contents to temporary object then re-instate
+              var k;
+              var t = {};
+              for(k in o[v]){
+                t[k] = o[v][k];
+              }
+              o[v] = instance;
+              for(k in t){
+                o[v][k] = t[k];
+              }
+            }else{
+              o[v] = instance;
+            }
+            o[v]['_initialised'] = true;
+            document.dispatchEvent(new CustomEvent(name + '.ready'));
+          }else{
+            if(typeof o[v] === 'undefined'){
+              o[v] = {};
+            }
+            o = o[v];
+          }
+        }
+      }
+
+      function onNamespacesLoaded(namespaces, thisFunction){
+        if(typeof namespaces === 'string') namespaces = [namespaces];
+
+        var namespacesLoaded = 0;
+        var namespaceLoaded = function(){
+          namespacesLoaded++
+          if(namespacesLoaded === namespaces.length) thisFunction();
+        }
+
+        for(var j=0; j<namespaces.length; j++){
+          var i, v,
+                  namespace = namespaces[j],
+                  ready = false,
+                  parts = namespace.split('.'),
+                  l = parts.length,
+                  o = window,
+                  n = '';
+          for(i = 0; i < l; i++){
+            v = parts[i];
+            n += (n ? '.' : '') + v;
+            if(typeof o[v] !== "object"){
+              break;
+            }else if(n === namespace && typeof o[v] === "object" && o[v]._initialised){
+              ready = true;
+            }
+            o = o[v];
+          }
+
+          if(ready){
+            namespaceLoaded();
+          }else{
+            document.addEventListener(namespace + '.ready', namespaceLoaded, false);
+          }
+        }
+      }
+    </script>
+
+    <script src="js/gallery-controller.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/controllers/controls.js"></script>
     <script src="js/controllers/oculus-touch-controls.js"></script>
     <script src="js/controllers/daydream-controls.js"></script>
-
+    <script src="js/controllers/gearvr-controls.js"></script>
+    <script src="js/controllers/magicleap-controls.js"></script>
+    <script src="js/controllers/oculus-go-controls.js"></script>
+    <script src="js/controllers/vive-controls.js"></script>
+    <script src="js/controllers/vive-focus-controls.js"></script>
+    <script src="js/controllers/windows-motion-controls.js"></script>
 
     <script src="js/index.js"></script>
     <link rel="stylesheet" type="text/css" href="css/index.css">
@@ -17,26 +114,70 @@
   <body>
     <div id="mask"></div>
     <a-scene id="scene" class="hidden" vr-mode-ui="enabled: false" >
+      <a-assets id="assets"></a-assets>
       <a-entity id="head" camera position="0 0 0" stereocam="eye:left;"></a-entity>
+      <a-entity cursor="rayOrigin:mouse"></a-entity>
 
       <!-- in VR mode, the first box is displayed only in the left eye, the second one in the right eye -->
       <a-entity gallery-controller>
-        <a-plane
+        <a-entity id="image-loading" visible="false" position="0 0 -1" text="color: white; align: center; value: Loading image..."></a-entity>
+        <a-entity id="image-load-error" visible="false" position="0 0 -1" text="color: red; align: center; value: Error loading image"></a-entity>
+        <a-plane id="left-image"
           material="repeat:0.5 1"
           scale="2 1 1"
           position="0 0 -1"
           stereo="eye:left"
-        ></a-plane>
-        <a-plane
+        >
+        </a-plane>
+        <a-plane id="right-image"
           material="repeat:0.5 1; offset: 0.5 0"
           scale="2 1 1"
           position="0 0 -1"
           stereo="eye: right"
         ></a-plane>
-        <a-entity position="0 -0.6 -1" text="align: center;"></a-entity>
+        <a-entity id="description-text" position="0 -0.6 -1" scale="2 2 2"  text="align: center; wrapCount: 80;"></a-entity>
+
+        <a-plane id="previous-button" material="color: white" position="-1.1 0 -1" width="0.1" height="0.1"
+                 data-clickable data-button
+                 event-set__enter="_event: mouseenter;"
+                 event-set__leave="_event: mouseleave;"
+        >
+          <a-entity text="color: black; align: center; value: &lt;"></a-entity>
+        </a-plane>
+        <a-plane id="next-button" material="color: white" position="1.1 0 -1" width="0.1" height="0.1"
+                 data-clickable data-button
+                 event-set__enter="_event: mouseenter;"
+                 event-set__leave="_event: mouseleave;"
+        >
+          <a-entity text="color: black; align: center; value: &gt;"></a-entity>
+        </a-plane>
+
+        <a-plane id="increase-distance-button" class="distance-button vr-only" material="color: white" position="-1.1 0.6 -1" width="0.1" height="0.1"
+                 data-clickable data-button
+                 event-set__enter="_event: mouseenter;"
+                 event-set__leave="_event: mouseleave;"
+        >
+          <a-entity text="color: black; align: center; value: -"></a-entity>
+        </a-plane>
+        <a-plane id="decrease-distance-button" class="distance-button vr-only" material="color: white" position="1.1 0.6 -1" width="0.1" height="0.1"
+                 data-clickable data-button
+                 event-set__enter="_event: mouseenter;"
+                 event-set__leave="_event: mouseleave;"
+        >
+          <a-entity text="color: black; align: center; value: +"></a-entity>
+        </a-plane>
+
+        <a-plane id="exit-button" material="color: white" position="0 0.6 -1" width="0.3" height="0.1"
+                 data-clickable data-button
+                 event-set__enter="_event: mouseenter;"
+                 event-set__leave="_event: mouseleave;"
+        >
+          <a-entity text="color: black; align: center; value: Exit"></a-entity>
+        </a-plane>
+
       </a-entity>
 
-<!--      <a-entity laser-controls="hand: right" raycaster="objects: .collidable"></a-entity>-->
+      <a-entity laser-controls="hand: right" raycaster="objects: [data-clickable]"></a-entity>
 
       <a-entity oculus-touch-controls="hand: left" oculus-touch-controls-left></a-entity>
       <a-entity oculus-touch-controls="hand: right" oculus-touch-controls-right></a-entity>
@@ -44,11 +185,32 @@
       <a-entity daydream-controls="hand: left" daydream-controls-left></a-entity>
       <a-entity daydream-controls="hand: right" daydream-controls-right></a-entity>
 
+      <a-entity gearvr-controls="hand: left" gearvr-controls-left></a-entity>
+      <a-entity gearvr-controls="hand: right" gearvr-controls-right></a-entity>
+
+      <a-entity magicleap-controls="hand: left" magicleap-controls-left></a-entity>
+      <a-entity magicleap-controls="hand: right" magicleap-controls-right></a-entity>
+
+      <a-entity oculus-go-controls="hand: left" oculus-go-controls-left></a-entity>
+      <a-entity oculus-go-controls="hand: right" oculus-go-controls-right></a-entity>
+
+      <a-entity vive-controls="hand: left" vive-controls-left></a-entity>
+      <a-entity vive-controls="hand: right" vive-controls-right></a-entity>
+
+      <a-entity vive-focus-controls="hand: left" vive-focus-controls-left></a-entity>
+      <a-entity vive-focus-controls="hand: right" vive-focus-controls-right></a-entity>
+
+      <a-entity windows-motion-controls="hand: left" windows-motion-controls-left></a-entity>
+      <a-entity windows-motion-controls="hand: right" windows-motion-controls-right></a-entity>
+
     </a-scene>
 
     <div id="ui">
+      <h1>Stereoscopic slideshow</h1>
       <p>
-        Click an image to view it in VR mode
+        <span class="vr-pending">Determining VR support...</span>
+        <span class="vr-only">Click an image to view it in stereoscopic 3D.</span>
+        <span class="non-vr-only">Your device doesn't support VR but you can still click an image to view it in fullscreen 2D.</span>
       </p>
       <div class="images"><!-- dynamically populated --></div>
     </div>
