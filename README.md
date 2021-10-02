@@ -12,3 +12,4 @@ The slideshow UI has buttons to load the next/previous image in the set and move
 The controllers for the various [VR headsets supported by A-frame](https://aframe.io/docs/1.2.0/introduction/vr-headsets-and-webvr-browsers.html#which-vr-headsets-does-a-frame-support) are wired up so they can also be used to operate the slideshow controls.
 
 The slideshow will still work on devices without immersive VR support by the images will be rendered in 2D.
+
