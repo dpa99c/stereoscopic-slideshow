@@ -13,4 +13,10 @@ The controllers for the various [VR headsets supported by A-frame](https://afram
 
 The slideshow will still work on devices without immersive VR support by the images will be rendered in 2D.
 
+# Demo
 You can view the slideshow demo here: https://dpa99c.github.io/stereoscopic-slideshow/
+
+
+## Screenshots
+<img src="screenshots/thumbnails.jpg" />
+<img src="screenshots/slideshow.jpg" />
