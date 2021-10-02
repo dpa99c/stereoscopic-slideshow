@@ -1,0 +1,48 @@
+body.vr-support-resolved .vr-pending,
+body:not(.vr-support-resolved) .non-vr-only,
+body:not(.vr-support-resolved) .vr-only,
+body.vr-supported .non-vr-only,
+body.vr-unsupported .vr-only {
+  display: none; }
+
+#mask, #scene {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0; }
+
+#mask {
+  z-index: 0;
+  background-color: black; }
+
+#scene {
+  z-index: 1; }
+  #scene.hidden {
+    z-index: -1; }
+
+p {
+  color: white; }
+
+#ui {
+  padding: 1px 20px;
+  position: relative;
+  z-index: 100;
+  color: white;
+  overflow-y: auto;
+  height: 100%; }
+  #ui .images .image {
+    display: inline-block;
+    margin: 0 8px 8px 0;
+    width: 225px;
+    overflow: hidden; }
+    #ui .images .image img {
+      width: 450px;
+      margin-right: 10px; }
+
+.preloader {
+  display: none; }
+  .preloader.shown {
+    display: block; }
+
+/*# sourceMappingURL=index.css.map */
