@@ -127,7 +127,7 @@
         currentIndex = $img.data('index');
         const src = FULLSIZE_URL_TEMPLATE.replace('{name}', $img.data('name')),
             description = $img.attr('alt');
-        GalleryController.showImg(currentIndex, src, description);
+        GalleryController.showImg(src, description);
     };
 
     let onWebXrController = function(event){

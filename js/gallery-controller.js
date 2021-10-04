@@ -136,7 +136,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
     };
 
 
-    Controller.showImg = function(index, url, description){
+    Controller.showImg = function(url, description){
         function onImgLoaded(){
             leye.setAttribute("material", "src", _stereoImage);
             reye.setAttribute("material", "src", _stereoImage);
