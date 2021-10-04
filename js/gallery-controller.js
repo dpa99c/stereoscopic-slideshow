@@ -159,7 +159,6 @@ AFRAME.registerComponent("gallery-controller", (function(){
             if(!Controller.isInVR && Controller.shouldEnterVR) Controller.enterVR();
         }
 
-        setStereoImageVisibility(false);
         Utils.setVisibleOnEntityNodelist($descriptionText, false);
         Utils.setVisibleOnEntityNodelist($imageLoading, true);
         Utils.setVisibleOnEntityNodelist($imageLoadError, false);
