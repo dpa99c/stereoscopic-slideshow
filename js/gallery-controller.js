@@ -14,7 +14,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
     const _stereoImage = '#'+stereoImageId;
     
     let galleryController, sceneEl, leye, reye, $descriptionText, descriptionText,
-        $body, $scene, $sceneEntities, $assets, $stereoImage, stereoImage, $imageLoading, $imageLoadError;
+        $body, $scene, $sceneEntities, $assets, $imageLoading, $imageLoadError;
 
     /*********************
      * Public properties
@@ -71,11 +71,19 @@ AFRAME.registerComponent("gallery-controller", (function(){
         });
     };
 
-    var unloadStereoImage = function(){
-        $stereoImage = $(stereoImage);
-        $stereoImage.attr('src', '').remove();
-        $stereoImage = stereoImage = null;
+    var removeStereoImage = function(){
+        let $stereoImage = $(_stereoImage);
+        if($stereoImage.length){
+            let stereoImage = $stereoImage[0];
+            stereoImage.onload = stereoImage.onerror = null;
+            $stereoImage.attr('src', '').remove();
+            $stereoImage = stereoImage = null;
+        }
         Controller.isLoadingStereoImage = false;
+    };
+
+    var unloadStereoImage = function(){
+        removeStereoImage();
         leye.setAttribute("material", "src", '');
         reye.setAttribute("material", "src", '');
         setStereoImageVisibility(false);
@@ -157,21 +165,15 @@ AFRAME.registerComponent("gallery-controller", (function(){
         Utils.setVisibleOnEntityNodelist($imageLoadError, false);
         if(!Controller.isInVR) Controller.enterVR();
 
-        $stereoImage = $(stereoImage);
-        if($stereoImage.length){
-            $stereoImage.remove();
-            $stereoImage[0] = null;
-        }
+        unloadStereoImage();
 
-
-        stereoImage = document.createElement('img');
+        let stereoImage = document.createElement('img');
         stereoImage.setAttribute('id', stereoImageId);
         stereoImage.setAttribute('crossorigin', "anonymous");
         stereoImage.setAttribute('src', url);
         stereoImage.onload = onImgLoaded;
         stereoImage.onerror = onImageLoadError;
-        $stereoImage = $(stereoImage);
-        $stereoImage.appendTo($assets);
+        $(stereoImage).appendTo($assets);
         Controller.isLoadingStereoImage = true;
     };
 
