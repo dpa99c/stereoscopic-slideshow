@@ -1,6 +1,6 @@
 /* global AFRAME */
 AFRAME.registerComponent("gallery-controller", (function(){
-    var Controller = {};
+    const Controller = {};
 
     /*********************
      * Internal properties
@@ -28,7 +28,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
     /*********************
      * Internal functions
      *********************/
-    var init = function(){
+    const init = function(){
         Controller.el = galleryController.el;
         sceneEl = Controller.el.sceneEl;
         leye = $('#left-image')[0];
@@ -61,7 +61,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
         sceneEl.addEventListener('exit-vr', Controller.onExitVR.bind(this), false);
     };
 
-    var onIsSessionSupported = function(isSupported){
+    const onIsSessionSupported = function(isSupported){
         Controller.isImmersiveVRSupported = isSupported;
         onNamespacesLoaded([
             'Components.Utils'
@@ -71,7 +71,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
         });
     };
 
-    var removeStereoImage = function(){
+    const removeStereoImage = function(){
         let $stereoImage = $(_stereoImage);
         if($stereoImage.length){
             let stereoImage = $stereoImage[0];
@@ -82,14 +82,14 @@ AFRAME.registerComponent("gallery-controller", (function(){
         Controller.isLoadingStereoImage = false;
     };
 
-    var unloadStereoImage = function(){
+    const unloadStereoImage = function(){
         removeStereoImage();
         leye.setAttribute("material", "src", '');
         reye.setAttribute("material", "src", '');
         setStereoImageVisibility(false);
     };
 
-    var setStereoImageVisibility = function(visible){
+    const setStereoImageVisibility = function(visible){
         leye.setAttribute("visible", visible)
         reye.setAttribute("visible", visible)
     };
