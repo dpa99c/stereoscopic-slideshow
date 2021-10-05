@@ -1,4 +1,4 @@
-/* global AFRAME */
+/* global AFRAME, THREE */
 AFRAME.registerComponent("gallery-controller", (function(){
     const Controller = {};
 
@@ -14,7 +14,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
     const _stereoImage = '#'+stereoImageId;
     
     let galleryController, sceneEl, leye, reye, $descriptionText, descriptionText,
-        $body, $scene, $sceneEntities, $assets, $imageLoading, $imageLoadError;
+        $body, $scene, $sceneEntities, $assets, $imageLoading, $imageLoadError, sceneMaterial;
 
     /*********************
      * Public properties
@@ -31,6 +31,7 @@ AFRAME.registerComponent("gallery-controller", (function(){
     const init = function(){
         Controller.el = galleryController.el;
         sceneEl = Controller.el.sceneEl;
+        sceneMaterial = sceneEl.systems.material;
         leye = $('#left-image')[0];
         reye = $('#right-image')[0];
         $descriptionText = $('#description-text');
@@ -79,10 +80,23 @@ AFRAME.registerComponent("gallery-controller", (function(){
             $stereoImage.attr('src', '').remove();
             $stereoImage = stereoImage = null;
         }
+        THREE.Cache.clear();
+        sceneMaterial.clearTextureCache();
         Controller.isLoadingStereoImage = false;
     };
 
+    const unloadTextureFromEyePlane = function(element){
+        const material = element.getObject3D("mesh").material;
+        if(material.map){
+            material.map.dispose();
+            material.map = null;
+            material.needsUpdate = true;
+        }
+    };
+
     const unloadStereoImage = function(){
+        unloadTextureFromEyePlane(leye);
+        unloadTextureFromEyePlane(reye);
         removeStereoImage();
         leye.setAttribute("material", "src", '');
         reye.setAttribute("material", "src", '');
