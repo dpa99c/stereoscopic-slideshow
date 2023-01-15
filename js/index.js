@@ -31,6 +31,50 @@
         "WindowsMotion"
     ];
 
+    const controllerHelpText = {
+        OculusTouch: {
+            title: "Oculus Touch controls",
+            text: "Thumbstick left/right to change slide" +
+                "\nThumbstick up/down to change viewing distance" +
+                "\nA/B/X/Y button to exit VR"
+        },
+        Daydream: {
+            title: "Daydream controls",
+            text: "Left/right trackpad to change slide"
+        },
+        GearVr: {
+            title: "Gear VR controls",
+            text: "Left/right trackpad to change slide"
+        },
+        MagicLeap: {
+            title: "Magic Leap controls",
+            text: "Touchpad left/right to change slide" +
+                "\nTouchpad up/down to change viewing distance" +
+                "\nMenu button to exit VR"
+        },
+        OculusGo: {
+            title: "Oculus Go controls",
+            text: "Touchpad left/right to change slide" +
+                "\nTouchpad up/down to change viewing distance"
+        },
+        Vive: {
+            title: "Vive controls",
+            text: "Left/right trackpad to change slide" +
+                "\nMenu/system button to exit VR"
+        },
+        ViveFocus: {
+            title: "Vive Focus controls",
+            text: "Trackpad left/right to change slide" +
+                "\nTrackpad up/down to change viewing distance"
+        },
+        WindowsMotion: {
+            title: "Windows Motion controls",
+            text: "Trackpad/thumbstick left/right to change slide" +
+                "\nTrackpad/thumbstick up/down to change viewing distance" +
+                "\nMenu button to exit VR"
+        }
+    };
+
     let $imageContainer, $images, maxImgIndex, currentIndex,
         Utils, GalleryController, Controls,
         Controllers = {};
@@ -172,7 +216,7 @@
             ){
                 if(hand === Controls.hand.left){
                     showPrevImage();
-                }else if(hand === Controls.hand.left){
+                }else if(hand === Controls.hand.right){
                     showNextImage();
                 }
             }
